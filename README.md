@@ -150,6 +150,9 @@ mvn clean test -Dbrowser=chrome -Dheadless=true "-Dcucumber.filter.tags=@smoke"
 # Regression
 mvn clean test -Dbrowser=chrome -Dheadless=true "-Dcucumber.filter.tags=@regression"
 
+# Home only
+mvn clean test -Dbrowser=chrome -Dheadless=true "-Dcucumber.filter.tags=@home"
+
 # Cart only
 mvn clean test -Dbrowser=chrome -Dheadless=true "-Dcucumber.filter.tags=@cart"
 
