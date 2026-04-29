@@ -202,3 +202,111 @@ src/test/resources/testdata/users.example.csv
 - `steps`: Gherkin step definitions.
 - `utils`: CSV readers and parsing support.
 - `resources/features`: Gherkin scenarios.
+
+
+## CI/CD Integration (Jenkins)
+
+A Jenkins pipeline is implemented using a Jenkinsfile located at the root of the project.
+This allows automated execution of tests based on Cucumber tags, enabling flexible and scalable test runs.
+
+Jenkins Pipeline Overview
+
+The pipeline performs the following steps:
+
+Checkout the code from the repository.
+Clean the project using Maven.
+Execute tests based on the selected Cucumber tag.
+Archive test results and reports.
+
+## Jenkinsfile Configuration
+
+The pipeline is parameterized to allow dynamic test execution:
+
+parameters {
+    choice(
+        name: 'TEST_TAG',
+        choices: [
+            '@smoke',
+            '@regression',
+            '@home',
+            '@cart',
+            '@featured',
+            '@search',
+            '@checkout',
+            '@guestUser',
+            '@existingUser',
+            '@registerUser'
+        ],
+        description: 'Select Cucumber tag to execute'
+    )
+}
+
+Test execution is controlled by the selected tag:
+
+bat "mvn test -Dcucumber.filter.tags=${params.TEST_TAG}"
+
+## Execution Modes
+
+## Manual Execution
+
+Tests can be executed manually from Jenkins by selecting a tag from the dropdown menu.
+
+Examples:
+
+@smoke → quick validation of critical flows
+@regression → full functional coverage
+@checkout → complete checkout validation
+@cart → shopping cart scenarios
+
+## Automated Execution (Recommended)
+
+In a real CI/CD setup, different tags are executed depending on the context:
+
+Trigger	Execution
+Pull Request	@smoke
+Merge to main	@checkout
+Nightly execution	@regression
+
+This ensures fast feedback and full system validation without blocking development.
+
+
+## Running ALL Tests in Jenkins
+
+To execute all tests (without tag filtering), update the Jenkinsfile:
+
+bat "mvn test"
+
+Alternatively, a conditional logic can be implemented:
+
+stage('Run Tests') {
+    steps {
+        script {
+            if (params.TEST_TAG == 'ALL') {
+                bat 'mvn test'
+            } else {
+                bat "mvn test -Dcucumber.filter.tags=${params.TEST_TAG}"
+            }
+        }
+    }
+}
+
+
+## Benefits of the Pipeline
+
+Flexible execution through tag-based filtering
+Faster feedback using smoke tests
+Full regression coverage in scheduled runs
+Easy integration with CI/CD environments
+Improved maintainability and scalability
+
+
+## Recommended Workflow
+
+Develop and test locally.
+Push changes to GitHub.
+Jenkins triggers execution automatically or manually.
+Review results in Jenkins reports.
+Fix issues and repeat the cycle.
+
+## CI/CD FLow Summary
+VS Code → Git → GitHub → Jenkins → Test Execution → Reports
