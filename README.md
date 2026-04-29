@@ -26,6 +26,46 @@ Propiedades soportadas:
 - `headless`: `true` o `false` (default: `false`)
 - `baseUrl`: URL base de la aplicacion (default: `https://opencart.abstracta.us`)
 
+## Comandos de ejecucion
+
+Para ejecutar (PowerShell), desde `walmart-automation`:
+
+```powershell
+# Todos los tests
+mvn clean test -Dbrowser=chrome -Dheadless=true
+
+# Smoke
+mvn clean test -Dbrowser=chrome -Dheadless=true "-Dcucumber.filter.tags=@smoke"
+
+# Regression
+mvn clean test -Dbrowser=chrome -Dheadless=true "-Dcucumber.filter.tags=@regression"
+
+# Solo Cart
+mvn clean test -Dbrowser=chrome -Dheadless=true "-Dcucumber.filter.tags=@cart"
+
+# Solo Checkout
+mvn clean test -Dbrowser=chrome -Dheadless=true "-Dcucumber.filter.tags=@checkout"
+
+# Solo Search
+mvn clean test -Dbrowser=chrome -Dheadless=true "-Dcucumber.filter.tags=@search"
+
+# Solo Existing User
+mvn clean test -Dbrowser=chrome -Dheadless=true "-Dcucumber.filter.tags=@existingUser"
+
+# Solo Register User
+mvn clean test -Dbrowser=chrome -Dheadless=true "-Dcucumber.filter.tags=@registerUser"
+```
+
+Ejemplos utiles de combinaciones:
+
+```powershell
+# Regression sin register user
+mvn clean test -Dbrowser=chrome -Dheadless=true "-Dcucumber.filter.tags=@regression and not @registerUser"
+
+# Smoke solo home
+mvn clean test -Dbrowser=chrome -Dheadless=true "-Dcucumber.filter.tags=@smoke and @home"
+```
+
 ## Datos sensibles
 
 El archivo `src/test/resources/testdata/users.csv` se usa para credenciales de usuario existente y no se versiona.
