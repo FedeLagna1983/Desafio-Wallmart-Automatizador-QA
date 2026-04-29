@@ -1,0 +1,10 @@
+target/
+.idea/
+.vscode/
+src/test/resources/testdata/users.csv
+*.log
+*.tmp
+*.class
+*.iml
+.DS_Store
+Thumbs.db

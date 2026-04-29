@@ -1,0 +1,2 @@
+userKey,firstName,lastName,emailPrefix,emailDomain,telephone,password,address1,address2,city,postCode,country,region
+newUser1,Federico,Lagna,fede.auto,@mail.com,123456789,Test1234,Register Street 123,Apartment 2,Santiago,1234567,United Kingdom,Greater London

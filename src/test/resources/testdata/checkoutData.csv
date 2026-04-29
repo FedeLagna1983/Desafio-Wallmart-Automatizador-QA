@@ -1,0 +1,3 @@
+scenario,firstName,lastName,email,telephone,address1,address2,city,postCode,country,region
+guestCheckout1,Federico,Lagna,federico.test@mail.com,123456789,Street 123,Apartment 1,Santiago,1234567,United Kingdom,Greater London
+guestCheckout2,Fede,Automation,fede.automation@mail.com,987654321,QA Street 456,Floor 2,Manchester,7654321,United Kingdom,Greater Manchester
