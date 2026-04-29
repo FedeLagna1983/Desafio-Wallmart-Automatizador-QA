@@ -85,15 +85,32 @@ Good development practices were applied:
 
 Flexible execution is supported through Cucumber tags:
 
-- `@checkout`: full checkout flow execution.
-- `@existingUser`: isolated existing user execution.
-- `@registerUser`: specific registration validation.
+- `@smoke`: critical scenarios for quick validation.
+- `@regression`: broader functional coverage for regression validation.
+- `@home`: home page validation scenarios.
+- `@cart`: shopping cart scenarios.
+- `@featured`: scenarios that add products from Featured products.
+- `@search`: scenarios that add products through search results.
+- `@checkout`: full checkout flow scenarios.
+- `@guestUser`: checkout as a guest user.
+- `@existingUser`: checkout with an existing user.
+- `@registerUser`: checkout by registering a new user.
 
 This enables execution for:
 
 - Local development.
 - Partial validations.
 - CI/CD pipeline runs.
+
+Current tag distribution:
+
+- `Home page validation`: `@smoke @home`.
+- `Add product from Featured and validate Shopping Cart`: `@smoke @cart @featured`.
+- `Update product quantity and validate Shopping Cart totals`: `@regression @cart @featured`.
+- `Add product from search and validate Shopping Cart`: `@regression @cart @search`.
+- `Complete checkout as guest user`: `@smoke @regression @checkout @guestUser`.
+- `Complete checkout with existing user`: `@regression @checkout @existingUser`.
+- `Complete checkout by registering a new user`: `@regression @checkout @registerUser`.
 
 ## Requirements
 
@@ -141,6 +158,12 @@ mvn clean test -Dbrowser=chrome -Dheadless=true "-Dcucumber.filter.tags=@checkou
 
 # Search only
 mvn clean test -Dbrowser=chrome -Dheadless=true "-Dcucumber.filter.tags=@search"
+
+# Featured products only
+mvn clean test -Dbrowser=chrome -Dheadless=true "-Dcucumber.filter.tags=@featured"
+
+# Guest User only
+mvn clean test -Dbrowser=chrome -Dheadless=true "-Dcucumber.filter.tags=@guestUser"
 
 # Existing User only
 mvn clean test -Dbrowser=chrome -Dheadless=true "-Dcucumber.filter.tags=@existingUser"

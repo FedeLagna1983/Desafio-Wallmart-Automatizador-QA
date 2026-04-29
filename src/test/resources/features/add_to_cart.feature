@@ -1,6 +1,6 @@
 Feature: Shopping Cart Flow
 
-  @smoke @cart
+  @smoke @cart @featured
   Scenario: Add product from Featured and validate Shopping Cart
     Given the user navigates to the home page
     When the user adds "MacBook" from Featured products to the cart
@@ -13,7 +13,7 @@ Feature: Shopping Cart Flow
     And the Continue Shopping button should be displayed
     And the Checkout button should be displayed
 
-  @regression @cart
+  @regression @cart @featured
   Scenario: Update product quantity and validate Shopping Cart totals
     Given the user navigates to the home page
     When the user adds "MacBook" from Featured products to the cart

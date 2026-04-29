@@ -1,6 +1,6 @@
-@regression @checkout
 Feature: Checkout Flow
 
+  @smoke @regression @checkout @guestUser
   Scenario: Complete checkout as guest user
     Given the user navigates to the home page
     When the user searches for "macbook"
@@ -16,7 +16,7 @@ Feature: Checkout Flow
     And the user confirms the order
     Then the order should be placed successfully
 
-  @existingUser
+  @regression @checkout @existingUser
   Scenario: Complete checkout with existing user
     Given the user has product "iphone" in the cart
     When the user proceeds to checkout
@@ -30,7 +30,7 @@ Feature: Checkout Flow
     And the user confirms the order
     Then the order should be placed successfully
 
-  @registerUser
+  @regression @checkout @registerUser
   Scenario: Complete checkout by registering a new user
     Given the user has product "macbook" in the cart
     When the user proceeds to checkout
