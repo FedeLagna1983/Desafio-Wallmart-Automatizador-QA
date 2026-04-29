@@ -206,25 +206,27 @@ src/test/resources/testdata/users.example.csv
 - `utils`: CSV readers and parsing support.
 - `resources/features`: Gherkin scenarios.
 
-
 ## CI/CD Integration (Jenkins)
 
-A Jenkins pipeline is implemented using a Jenkinsfile located at the root of the project.
-This allows automated execution of tests based on Cucumber tags, enabling flexible and scalable test runs.
+The project includes a Jenkins pipeline defined in the `Jenkinsfile` located at the root of the project.
 
-Jenkins Pipeline Overview
+The pipeline runs the automated Cucumber/TestNG test suite through Maven and allows selecting specific Cucumber tags for flexible execution.
 
-The pipeline performs the following steps:
+### Pipeline Overview
 
-Checkout the code from the repository.
-Clean the project using Maven.
-Execute tests based on the selected Cucumber tag.
-Archive test results and reports.
+The Jenkins pipeline performs the following steps:
 
-## Jenkinsfile Configuration
+- Checks out the source code from the repository.
+- Cleans the Maven project.
+- Runs tests using the selected Cucumber tag.
+- Archives generated artifacts and test reports.
+- Publishes JUnit results from Surefire reports.
 
-The pipeline is parameterized to allow dynamic test execution:
+### Jenkinsfile Configuration
 
+The pipeline uses a parameter named `TEST_TAG` to choose which group of scenarios will be executed:
+
+```groovy
 parameters {
     choice(
         name: 'TEST_TAG',
@@ -243,44 +245,80 @@ parameters {
         description: 'Select Cucumber tag to execute'
     )
 }
+```
 
-Test execution is controlled by the selected tag:
+The selected tag is passed to Maven using the `cucumber.filter.tags` property:
 
-bat "mvn test -Dcucumber.filter.tags=${params.TEST_TAG}"
+```groovy
+stage('Run Tests') {
+    steps {
+        bat "mvn test -Dcucumber.filter.tags=${params.TEST_TAG}"
+    }
+}
+```
 
-## Execution Modes
+### Execution Modes
 
-## Manual Execution
+Tests can be executed manually from Jenkins by selecting one of the available tags from the dropdown menu.
 
-Tests can be executed manually from Jenkins by selecting a tag from the dropdown menu.
+Common execution examples:
 
-Examples:
+| Tag | Purpose |
+| --- | --- |
+| `@smoke` | Quick validation of critical flows. |
+| `@regression` | Full functional regression coverage. |
+| `@checkout` | Complete checkout validation. |
+| `@cart` | Shopping cart scenarios. |
+| `@search` | Product search scenarios. |
+| `@registerUser` | Checkout by registering a new user. |
 
-@smoke → quick validation of critical flows
-@regression → full functional coverage
-@checkout → complete checkout validation
-@cart → shopping cart scenarios
+### Recommended Automated Strategy
 
-## Automated Execution (Recommended)
+In a CI/CD environment, different tags can be executed depending on the pipeline trigger:
 
-In a real CI/CD setup, different tags are executed depending on the context:
+| Trigger | Recommended Execution |
+| --- | --- |
+| Pull request | `@smoke` |
+| Merge to `main` | `@checkout` |
+| Nightly execution | `@regression` |
 
-Trigger	Execution
-Pull Request	@smoke
-Merge to main	@checkout
-Nightly execution	@regression
+This provides fast feedback for code changes while still allowing broader validation in scheduled runs.
 
-This ensures fast feedback and full system validation without blocking development.
+### Running All Tests in Jenkins
 
+To execute all tests without tag filtering, use:
 
-## Running ALL Tests in Jenkins
+```groovy
+bat 'mvn test'
+```
 
-To execute all tests (without tag filtering), update the Jenkinsfile:
+If the Jenkins pipeline needs to support both tagged execution and full execution, add an `ALL` option to the `TEST_TAG` parameter:
 
-bat "mvn test"
+```groovy
+parameters {
+    choice(
+        name: 'TEST_TAG',
+        choices: [
+            'ALL',
+            '@smoke',
+            '@regression',
+            '@home',
+            '@cart',
+            '@featured',
+            '@search',
+            '@checkout',
+            '@guestUser',
+            '@existingUser',
+            '@registerUser'
+        ],
+        description: 'Select Cucumber tag to execute'
+    )
+}
+```
 
-Alternatively, a conditional logic can be implemented:
+Then use conditional logic in the test stage:
 
+```groovy
 stage('Run Tests') {
     steps {
         script {
@@ -292,24 +330,39 @@ stage('Run Tests') {
         }
     }
 }
+```
 
+### Reports and Artifacts
 
-## Benefits of the Pipeline
+The pipeline archives files generated inside the `target` directory and publishes Surefire XML reports:
 
-Flexible execution through tag-based filtering
-Faster feedback using smoke tests
-Full regression coverage in scheduled runs
-Easy integration with CI/CD environments
-Improved maintainability and scalability
+```groovy
+post {
+    always {
+        archiveArtifacts artifacts: 'target/**/*', allowEmptyArchive: true
+        junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml'
+    }
+}
+```
 
+### Benefits
 
-## Recommended Workflow
+- Flexible execution through Cucumber tag filtering.
+- Faster feedback with smoke tests.
+- Full regression coverage through scheduled runs.
+- Clear integration with GitHub and Jenkins.
+- Better traceability using archived reports and JUnit results.
 
-Develop and test locally.
-Push changes to GitHub.
-Jenkins triggers execution automatically or manually.
-Review results in Jenkins reports.
-Fix issues and repeat the cycle.
+### Recommended Workflow
 
-## CI/CD FLow Summary
-VS Code → Git → GitHub → Jenkins → Test Execution → Reports
+1. Develop and test locally.
+2. Push changes to GitHub.
+3. Run the Jenkins pipeline manually or through an automated trigger.
+4. Review console output, archived artifacts, and JUnit reports.
+5. Fix issues and repeat the cycle.
+
+### CI/CD Flow Summary
+
+```text
+VS Code -> Git -> GitHub -> Jenkins -> Test Execution -> Reports
+```
