@@ -1,130 +1,130 @@
 # Walmart Automation
 
-Proyecto base de automatizacion UI usando Java, Selenium WebDriver, Cucumber y TestNG.
+Base UI automation project using Java, Selenium WebDriver, Cucumber, and TestNG.
 
-## Estrategia de Testing
+## Testing Strategy
 
-Se definio una estrategia de testing enfocada en validar los flujos criticos del negocio mediante automatizacion end-to-end, priorizando cobertura funcional, mantenibilidad y escalabilidad.
+A testing strategy was defined to validate critical business flows through end-to-end automation, prioritizing functional coverage, maintainability, and scalability.
 
-## Enfoque
+## Approach
 
-Se adopto un enfoque end-to-end (E2E) para validar el comportamiento del sistema desde la perspectiva del usuario final, cubriendo el flujo completo de compra.
+An end-to-end (E2E) approach was adopted to validate system behavior from the end user's perspective, covering the complete purchase flow.
 
-Se priorizan funcionalidades criticas del negocio, considerando:
+Critical business functionality is prioritized by considering:
 
-- Alta frecuencia de uso.
-- Impacto en la conversion.
-- Riesgo asociado a fallas.
+- High usage frequency.
+- Impact on conversion.
+- Risk associated with failures.
 
-## Tipos de pruebas implementadas
+## Implemented Test Types
 
-Se implementaron pruebas funcionales automatizadas que validan:
+Automated functional tests were implemented to validate:
 
-- Navegacion entre paginas.
-- Interaccion con elementos de UI.
-- Validaciones de formularios.
-- Comportamiento del carrito.
-- Flujo completo de checkout.
+- Navigation between pages.
+- Interaction with UI elements.
+- Form validations.
+- Shopping cart behavior.
+- Complete checkout flow.
 
-## Cobertura de escenarios
+## Scenario Coverage
 
-Se definieron distintos escenarios dentro de los flujos principales para aumentar la cobertura:
+Different scenarios were defined within the main flows to increase coverage:
 
-- Guest Checkout: compra sin registro.
-- Existing User Checkout: reutilizacion de datos existentes.
-- Register User Checkout: creacion de cuenta durante la compra.
+- Guest Checkout: purchase without registration.
+- Existing User Checkout: reuse of existing user data.
+- Register User Checkout: account creation during purchase.
 
-Esto permite validar distintos tipos de usuario y caminos del sistema.
+This allows validating different user types and system paths.
 
-## Diseno del framework
+## Framework Design
 
-Se aplica el patron Page Object Model (POM) para:
+The Page Object Model (POM) pattern is applied to:
 
-- Separar logica de negocio de la interaccion con UI.
-- Mejorar mantenibilidad.
-- Facilitar reutilizacion de codigo.
+- Separate business logic from UI interaction.
+- Improve maintainability.
+- Enable code reuse.
 
-El proyecto se organiza en capas:
+The project is organized in layers:
 
-- `pages`: interaccion con la UI.
-- `steps`: definicion de pasos de negocio con Cucumber.
-- `features`: definicion de escenarios.
-- `utils`: manejo de datos CSV.
-- `base`: metodos comunes reutilizables.
+- `pages`: UI interaction.
+- `steps`: business step definitions with Cucumber.
+- `features`: scenario definitions.
+- `utils`: CSV data handling.
+- `base`: reusable common methods.
 
-## Estrategia de sincronizacion
+## Synchronization Strategy
 
-Se evita el uso de esperas estaticas (`Thread.sleep`) y se utilizan:
+Static waits (`Thread.sleep`) are avoided, using instead:
 
-- Esperas explicitas (`waitForVisibility`, `waitUntil`).
-- Validaciones de estado del DOM.
+- Explicit waits (`waitForVisibility`, `waitUntil`).
+- DOM state validations.
 
-Esto ayuda a asegurar estabilidad y reducir flakiness en los tests.
+This helps ensure stability and reduce test flakiness.
 
-## Manejo de datos de prueba
+## Test Data Management
 
-Se utilizan archivos CSV para desacoplar datos de la logica de test:
+CSV files are used to decouple test data from test logic:
 
-- `products.csv`: datos de productos.
-- `checkoutData.csv`: datos de checkout guest.
-- `users.csv`: usuarios existentes.
-- `registerUserData.csv`: datos para registro dinamico.
+- `products.csv`: product data.
+- `checkoutData.csv`: guest checkout data.
+- `users.csv`: existing users.
+- `registerUserData.csv`: dynamic registration data.
 
-Tambien se generan datos dinamicos, por ejemplo email con timestamp, para evitar conflictos entre ejecuciones.
+Dynamic data is also generated, for example timestamp-based email addresses, to avoid conflicts between executions.
 
-## Principios aplicados
+## Applied Principles
 
-Se aplicaron buenas practicas de desarrollo:
+Good development practices were applied:
 
-- Single Responsibility: cada clase tiene una unica responsabilidad.
-- Reutilizacion de codigo: se evita duplicacion innecesaria.
-- Escalabilidad: facilidad para agregar nuevos escenarios.
-- Legibilidad: codigo claro y entendible.
+- Single Responsibility: each class has a single responsibility.
+- Code reuse: unnecessary duplication is avoided.
+- Scalability: new scenarios can be added easily.
+- Readability: code is clear and understandable.
 
-## Estrategia de ejecucion
+## Execution Strategy
 
-Se permite ejecucion flexible mediante tags de Cucumber:
+Flexible execution is supported through Cucumber tags:
 
-- `@checkout`: ejecucion completa del flujo.
-- `@existingUser`: ejecucion aislada de usuario existente.
-- `@registerUser`: validacion especifica de registro.
+- `@checkout`: full checkout flow execution.
+- `@existingUser`: isolated existing user execution.
+- `@registerUser`: specific registration validation.
 
-Esto facilita ejecucion por:
+This enables execution for:
 
-- Desarrollo local.
-- Validaciones parciales.
-- Ejecucion en pipelines CI/CD.
+- Local development.
+- Partial validations.
+- CI/CD pipeline runs.
 
-## Requisitos
+## Requirements
 
-- Java 17 o superior
+- Java 17 or higher
 - Maven 3.9+
-- Navegador disponible (Chrome, Firefox o Edge)
+- Available browser (Chrome, Firefox, or Edge)
 
-## Ejecutar pruebas
+## Run Tests
 
 ```bash
 mvn clean test
 ```
 
-## Configuracion por propiedades
+## Configuration Properties
 
 ```bash
 mvn clean test -Dbrowser=chrome -Dheadless=true -DbaseUrl=https://opencart.abstracta.us
 ```
 
-Propiedades soportadas:
+Supported properties:
 
 - `browser`: `chrome`, `firefox`, `edge` (default: `chrome`)
-- `headless`: `true` o `false` (default: `false`)
-- `baseUrl`: URL base de la aplicacion (default: `https://opencart.abstracta.us`)
+- `headless`: `true` or `false` (default: `false`)
+- `baseUrl`: application base URL (default: `https://opencart.abstracta.us`)
 
-## Comandos de ejecucion
+## Execution Commands
 
-Para ejecutar (PowerShell), desde `walmart-automation`:
+To run tests (PowerShell), from `walmart-automation`:
 
 ```powershell
-# Todos los tests
+# All tests
 mvn clean test -Dbrowser=chrome -Dheadless=true
 
 # Smoke
@@ -133,49 +133,49 @@ mvn clean test -Dbrowser=chrome -Dheadless=true "-Dcucumber.filter.tags=@smoke"
 # Regression
 mvn clean test -Dbrowser=chrome -Dheadless=true "-Dcucumber.filter.tags=@regression"
 
-# Solo Cart
+# Cart only
 mvn clean test -Dbrowser=chrome -Dheadless=true "-Dcucumber.filter.tags=@cart"
 
-# Solo Checkout
+# Checkout only
 mvn clean test -Dbrowser=chrome -Dheadless=true "-Dcucumber.filter.tags=@checkout"
 
-# Solo Search
+# Search only
 mvn clean test -Dbrowser=chrome -Dheadless=true "-Dcucumber.filter.tags=@search"
 
-# Solo Existing User
+# Existing User only
 mvn clean test -Dbrowser=chrome -Dheadless=true "-Dcucumber.filter.tags=@existingUser"
 
-# Solo Register User
+# Register User only
 mvn clean test -Dbrowser=chrome -Dheadless=true "-Dcucumber.filter.tags=@registerUser"
 ```
 
-Ejemplos utiles de combinaciones:
+Useful combination examples:
 
 ```powershell
-# Regression sin register user
+# Regression excluding register user
 mvn clean test -Dbrowser=chrome -Dheadless=true "-Dcucumber.filter.tags=@regression and not @registerUser"
 
-# Smoke solo home
+# Smoke home only
 mvn clean test -Dbrowser=chrome -Dheadless=true "-Dcucumber.filter.tags=@smoke and @home"
 ```
 
-## Datos sensibles
+## Sensitive Data
 
-El archivo `src/test/resources/testdata/users.csv` se usa para credenciales de usuario existente y no se versiona.
-Para crear datos locales, tomar como base:
+The `src/test/resources/testdata/users.csv` file is used for existing user credentials and is not versioned.
+To create local test data, use this file as a base:
 
 ```bash
 src/test/resources/testdata/users.example.csv
 ```
 
-## Estructura
+## Structure
 
-- `base`: utilidades comunes de paginas.
-- `config`: lectura centralizada de configuracion de ejecucion.
-- `factory`: creacion y cierre del WebDriver.
-- `hooks`: setup y teardown de Cucumber.
-- `model`: modelos tipados para datos de prueba.
+- `base`: common page utilities.
+- `config`: centralized execution configuration.
+- `factory`: WebDriver creation and teardown.
+- `hooks`: Cucumber setup and teardown.
+- `model`: typed models for test data.
 - `pages`: Page Objects.
-- `steps`: definiciones de pasos Gherkin.
-- `utils`: readers y soporte de parsing CSV.
-- `resources/features`: escenarios en Gherkin.
+- `steps`: Gherkin step definitions.
+- `utils`: CSV readers and parsing support.
+- `resources/features`: Gherkin scenarios.
