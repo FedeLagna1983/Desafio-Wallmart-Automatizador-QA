@@ -35,18 +35,21 @@ public class CartPage extends BasePage {
     }
 
     public void clickViewCart() {
-        WebElement cartLink = waitForVisibility(shoppingCartTopLink);
-        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block: 'center'});", cartLink);
-        waitForClickability(cartLink);
+    // 🔥 abrir el dropdown primero
+    click(cartButton);
 
-        try {
-            cartLink.click();
-        } catch (ElementClickInterceptedException e) {
-            ((JavascriptExecutor) driver).executeScript("arguments[0].click();", cartLink);
-        }
+    // 🔥 esperar que aparezca el link
+    waitForVisibility(viewCartLink);
 
-        waitForUrlContains("route=checkout/cart");
-        waitForPageReady();
+    // 🔥 click robusto (JS evita overlays)
+    ((JavascriptExecutor) driver).executeScript(
+            "arguments[0].click();",
+            driver.findElement(viewCartLink)
+    );
+
+    // 🔥 esperar navegación real
+    waitForUrlContains("route=checkout/cart");
+    waitForPageReady();
     }
 
     public void openCartPageFromTopMenu() {
