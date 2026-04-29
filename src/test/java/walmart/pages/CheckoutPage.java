@@ -2,6 +2,7 @@ package walmart.pages;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.JavascriptException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.TimeoutException;
@@ -40,6 +41,9 @@ public class CheckoutPage extends BasePage {
     private final By regionDropdown = By.id("input-payment-zone");
 
     private final By privacyPolicyCheckbox = By.cssSelector("#collapse-payment-address input[name='agree']");
+    private final By sameDeliveryAndBillingAddressCheckbox = By.cssSelector(
+            "#collapse-payment-address input[name='shipping_address']"
+    );
     private final By registerContinueButton = By.id("button-register");
     private final By billingContinueButton = By.id("button-guest");
 
@@ -50,10 +54,16 @@ public class CheckoutPage extends BasePage {
     private final By existingDeliveryAddressRadio = By.cssSelector("input[name='shipping_address'][value='existing']");
     private final By deliveryAddressContinueButton = By.id("button-shipping-address");
 
+    private final By deliveryMethodStepToggle = By.cssSelector("a[href='#collapse-shipping-method']");
     private final By deliveryMethodContinueButton = By.id("button-shipping-method");
 
     // --- PAYMENT ---
-    private final By bankTransferRadio = By.cssSelector("input[value='bank_transfer']");
+    private final By bankTransferRadio = By.cssSelector(
+            "#collapse-payment-method input[name='payment_method'][value='bank_transfer']"
+    );
+    private final By bankTransferLabel = By.xpath(
+            "//div[@id='collapse-payment-method']//input[@name='payment_method' and @value='bank_transfer']/ancestor::label"
+    );
     private final By termsCheckbox = By.cssSelector("#collapse-payment-method input[name='agree']");
     private final By paymentContinueButton = By.id("button-payment-method");
     private final By checkoutWarningAlert = By.cssSelector(".alert.alert-danger");
@@ -142,6 +152,8 @@ public class CheckoutPage extends BasePage {
 
         selectCountryAndRegion(country, region);
 
+        selectCheckboxIfPresent(sameDeliveryAndBillingAddressCheckbox);
+
         waitForVisibility(privacyPolicyCheckbox);
 
         if (!driver.findElement(privacyPolicyCheckbox).isSelected()) {
@@ -153,6 +165,8 @@ public class CheckoutPage extends BasePage {
         waitUntil(driver -> isDisplayedAndEnabled(deliveryAddressContinueButton)
                 || isDisplayedAndEnabled(deliveryMethodContinueButton)
                 || isDisplayedAndEnabled(bankTransferRadio));
+        waitForAjaxToFinish();
+        reloadCheckoutPageAfterRegistration();
     }
 
     // ======================
@@ -186,21 +200,33 @@ public class CheckoutPage extends BasePage {
     }
 
     public void continueWithDeliveryMethod() {
-        waitUntil(driver -> isDisplayedAndEnabled(deliveryAddressContinueButton)
+        waitUntil(driver -> isDisplayedAndEnabled(billingAddressContinueButton)
+                || isDisplayedAndEnabled(deliveryAddressContinueButton)
                 || isDisplayedAndEnabled(deliveryMethodContinueButton)
                 || isDisplayedAndEnabled(bankTransferRadio));
 
+        if (isDisplayedAndEnabled(billingAddressContinueButton)) {
+            click(billingAddressContinueButton);
+            waitForAjaxToFinish();
+            waitUntil(driver -> isDisplayedAndEnabled(deliveryAddressContinueButton)
+                    || isDisplayedAndEnabled(deliveryMethodContinueButton)
+                    || isDisplayedAndEnabled(bankTransferRadio));
+        }
+
         if (isDisplayedAndEnabled(deliveryAddressContinueButton)) {
             click(deliveryAddressContinueButton);
+            waitForAjaxToFinish();
             waitUntil(driver -> isDisplayedAndEnabled(deliveryMethodContinueButton)
                     || isDisplayedAndEnabled(bankTransferRadio));
         }
 
         if (isDisplayedAndEnabled(deliveryMethodContinueButton)) {
             click(deliveryMethodContinueButton);
+            waitForAjaxToFinish();
         }
 
         waitForVisibility(bankTransferRadio);
+        waitForAjaxToFinish();
     }
 
     // ======================
@@ -208,30 +234,7 @@ public class CheckoutPage extends BasePage {
     // ======================
 
     public void selectBankTransferPaymentMethod() {
-        WebElement bankTransfer = waitForVisibility(bankTransferRadio);
-
-        if (!bankTransfer.isSelected()) {
-            try {
-                click(bankTransfer);
-            } catch (Exception e) {
-                ((JavascriptExecutor) driver).executeScript("arguments[0].click();", bankTransfer);
-            }
-        }
-
-        if (!bankTransfer.isSelected()) {
-            ((JavascriptExecutor) driver).executeScript(
-                    "arguments[0].checked=true; arguments[0].dispatchEvent(new Event('change', {bubbles:true}));",
-                    bankTransfer
-            );
-        }
-
-        waitUntil(webDriver -> {
-            try {
-                return webDriver.findElement(bankTransferRadio).isSelected();
-            } catch (Exception e) {
-                return false;
-            }
-        });
+        selectPaymentRadio(bankTransferRadio, bankTransferLabel);
     }
 
     public void acceptTermsAndConditions() {
@@ -267,15 +270,25 @@ public class CheckoutPage extends BasePage {
             acceptTermsAndConditions();
 
             click(paymentContinueButton);
+            waitForAjaxToFinish();
             acceptUnexpectedSuccessAlertIfPresent();
 
             if (isConfirmStepAvailable()) {
                 return;
             }
+
+            if (isPaymentMethodWarningDisplayed()) {
+                reloadPaymentMethodsFromDeliveryStep();
+            }
         }
 
         if (isDisplayedNow(checkoutWarningAlert)) {
-            throw new RuntimeException("Unable to continue payment method: " + textOf(checkoutWarningAlert));
+            throw new RuntimeException(
+                    "Unable to continue payment method: "
+                            + textOf(checkoutWarningAlert)
+                            + System.lineSeparator()
+                            + paymentMethodDebugState()
+            );
         }
 
         waitUntil(driver -> isConfirmStepAvailable());
@@ -343,6 +356,141 @@ public class CheckoutPage extends BasePage {
         }
     }
 
+    private void selectCheckboxIfPresent(By locator) {
+        if (!isDisplayedAndEnabled(locator)) {
+            return;
+        }
+
+        WebElement checkbox = findDisplayedElement(locator);
+
+        if (!checkbox.isSelected()) {
+            clickElement(checkbox);
+        }
+    }
+
+    private void selectPaymentRadio(By radioLocator, By labelLocator) {
+        waitUntil(driver -> isDisplayedAndEnabled(radioLocator));
+        waitForAjaxToFinish();
+
+        WebElement radio = findDisplayedElement(radioLocator);
+        scrollIntoView(radio);
+
+        if (!radio.isSelected()) {
+            clickElement(radio);
+        }
+
+        if (!isDisplayedInputSelected(radioLocator)) {
+            clickElement(findDisplayedElement(labelLocator));
+        }
+
+        if (!isDisplayedInputSelected(radioLocator)) {
+            markInputAsSelected(findDisplayedElement(radioLocator));
+        }
+
+        dispatchInputEvents(findDisplayedElement(radioLocator));
+        waitUntil(driver -> isDisplayedInputSelected(radioLocator));
+    }
+
+    private WebElement findDisplayedElement(By locator) {
+        return wait.until(driver -> driver.findElements(locator).stream()
+                .filter(WebElement::isDisplayed)
+                .findFirst()
+                .orElse(null));
+    }
+
+    private void clickElement(WebElement element) {
+        try {
+            waitForClickability(element).click();
+        } catch (Exception e) {
+            ((JavascriptExecutor) driver).executeScript("arguments[0].click();", element);
+        }
+    }
+
+    private boolean isDisplayedInputSelected(By locator) {
+        try {
+            return driver.findElements(locator).stream()
+                    .filter(WebElement::isDisplayed)
+                    .anyMatch(WebElement::isSelected);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private void markInputAsSelected(WebElement input) {
+        ((JavascriptExecutor) driver).executeScript(
+                "arguments[0].checked = true;" +
+                        "arguments[0].dispatchEvent(new Event('input', {bubbles:true}));" +
+                        "arguments[0].dispatchEvent(new Event('change', {bubbles:true}));",
+                input
+        );
+    }
+
+    private void dispatchInputEvents(WebElement input) {
+        ((JavascriptExecutor) driver).executeScript(
+                "arguments[0].dispatchEvent(new Event('input', {bubbles:true}));" +
+                        "arguments[0].dispatchEvent(new Event('change', {bubbles:true}));",
+                input
+        );
+    }
+
+    private void scrollIntoView(WebElement element) {
+        ((JavascriptExecutor) driver).executeScript(
+                "arguments[0].scrollIntoView({block: 'center'});",
+                element
+        );
+    }
+
+    private void reloadPaymentMethodsFromDeliveryStep() {
+        try {
+            if (!isDisplayedAndEnabled(deliveryMethodContinueButton)) {
+                clickElement(findDisplayedElement(deliveryMethodStepToggle));
+            }
+
+            waitUntil(driver -> isDisplayedAndEnabled(deliveryMethodContinueButton));
+            click(deliveryMethodContinueButton);
+            waitForAjaxToFinish();
+            waitForVisibility(bankTransferRadio);
+            waitForAjaxToFinish();
+        } catch (Exception e) {
+            // Keep the original payment-method warning as the failure reason.
+        }
+    }
+
+    private void reloadCheckoutPageAfterRegistration() {
+        driver.get(TestConfig.getBaseUrl() + "/index.php?route=checkout/checkout");
+        waitForPageReady();
+        waitUntil(driver -> isDisplayedAndEnabled(billingAddressContinueButton)
+                || isDisplayedAndEnabled(deliveryAddressContinueButton)
+                || isDisplayedAndEnabled(deliveryMethodContinueButton)
+                || isDisplayedAndEnabled(bankTransferRadio));
+        waitForAjaxToFinish();
+    }
+
+    private String paymentMethodDebugState() {
+        Object debugState = ((JavascriptExecutor) driver).executeScript(
+                "const panel = document.querySelector('#collapse-payment-method');" +
+                        "if (!panel) return 'payment panel not found';" +
+                        "const radios = Array.from(panel.querySelectorAll('input[type=radio]')).map((input) => ({" +
+                        "name: input.name," +
+                        "value: input.value," +
+                        "checked: input.checked," +
+                        "visible: !!(input.offsetWidth || input.offsetHeight || input.getClientRects().length)" +
+                        "}));" +
+                        "const checkboxes = Array.from(panel.querySelectorAll('input[type=checkbox]')).map((input) => ({" +
+                        "name: input.name," +
+                        "value: input.value," +
+                        "checked: input.checked," +
+                        "visible: !!(input.offsetWidth || input.offsetHeight || input.getClientRects().length)" +
+                        "}));" +
+                        "const checkedValues = Array.from(panel.querySelectorAll('input[type=radio]:checked')).map((input) => input.value);" +
+                        "const selectedFields = panel.querySelectorAll('input[type=radio]:checked, input[type=checkbox]:checked, textarea');" +
+                        "const serialized = Array.from(selectedFields).map((input) => encodeURIComponent(input.name) + '=' + encodeURIComponent(input.value)).join('&');" +
+                        "return JSON.stringify({radios, checkboxes, checkedValues, serialized, panelText: panel.innerText});"
+        );
+
+        return String.valueOf(debugState);
+    }
+
     private boolean isConfirmStepAvailable() {
         return isDisplayedNow(confirmOrderButton)
                 || driver.getCurrentUrl().contains("route=checkout/success");
@@ -354,6 +502,25 @@ public class CheckoutPage extends BasePage {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    private boolean isPaymentMethodWarningDisplayed() {
+        return isDisplayedNow(checkoutWarningAlert)
+                && textOf(checkoutWarningAlert).contains("Payment method required");
+    }
+
+    private void waitForAjaxToFinish() {
+        waitUntil(driver -> {
+            try {
+                Object isIdle = ((JavascriptExecutor) driver).executeScript(
+                        "return !window.jQuery || window.jQuery.active === 0;"
+                );
+
+                return Boolean.TRUE.equals(isIdle);
+            } catch (JavascriptException e) {
+                return true;
+            }
+        });
     }
 
     private void acceptUnexpectedSuccessAlertIfPresent() {
