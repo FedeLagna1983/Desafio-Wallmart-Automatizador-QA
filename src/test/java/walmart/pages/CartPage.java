@@ -1,7 +1,6 @@
 package walmart.pages;
 
 import org.openqa.selenium.By;
-import org.openqa.selenium.ElementClickInterceptedException;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -13,7 +12,6 @@ import java.util.List;
 public class CartPage extends BasePage {
 
     private final By shoppingCartTitle = By.cssSelector("#content h1");
-    private final By shoppingCartTopLink = By.cssSelector("a[title='Shopping Cart'][href*='route=checkout/cart']");
     private final By productTable = By.xpath("//div[@id='content']//table[contains(@class,'table-bordered')][.//thead]");
     private final By continueShoppingButton = By.cssSelector("a[href*='route=common/home'].btn.btn-default");
     private final By checkoutButton = By.cssSelector("a[href*='route=checkout/checkout'].btn.btn-primary");
